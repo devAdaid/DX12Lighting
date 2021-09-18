@@ -492,10 +492,12 @@ void Update()
 	}
 	*/
 
+	gTheta += 0.0005f;
+
 	// 카메라 설정
 	float x = gRadius * sinf(gPhi) * cosf(gTheta);
-	float y = gRadius * sinf(gPhi) * sinf(gTheta);
-	float z = gRadius * cosf(gPhi);
+	float z = gRadius * sinf(gPhi) * sinf(gTheta);
+	float y = gRadius * cosf(gPhi);
 
 	XMVECTOR pos = XMVectorSet(x, y, z, 1);
 	XMVECTOR target = XMVectorZero();
