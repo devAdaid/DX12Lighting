@@ -167,6 +167,10 @@ typedef struct _Vertex
 ID3D12Resource* gVertexBuffer;
 D3D12_VERTEX_BUFFER_VIEW gVertexBufferView = { };
 
+ID3D12Resource* gIndexBuffer;
+D3D12_INDEX_BUFFER_VIEW gIndexBufferView = { };
+UINT gIndexCount;
+
 ID3D12RootSignature* gRootSignature = nullptr;
 ID3D12PipelineState* gPSO = nullptr;
 
@@ -552,6 +556,7 @@ void Release()
 {
 	COM_RELEASE(gConstantBuffer);
 	COM_RELEASE(gVertexBuffer);
+	COM_RELEASE(gIndexBuffer);
 
 	COM_RELEASE(gPSO);
 	COM_RELEASE(gRootSignature);
@@ -648,13 +653,46 @@ void InitTriangle()
 {
 	Vertex triangleVertices[] =
 	{
-		{{0.0f,0.25f,0.0f}, {1.0f,0.0f,0.0f,1.0f}},
-		{{0.25f,-0.25f,0.0f}, {0.0f,1.0f,0.0f,1.0f}},
-		{{-0.25f,-0.25f,0.0f}, {0.0f,0.0f,1.0f,1.0f}},
+		{{-1.0f, -1.0f, -1.0f}, {1.0f,0.0f,0.0f,1.0f}},
+		{{-1.0f, +1.0f, -1.0f}, {0.0f,1.0f,0.0f,1.0f}},
+		{{+1.0f, +1.0f, -1.0f}, {0.0f,0.0f,1.0f,1.0f}},
+		{{+1.0f, -1.0f, -1.0f}, {1.0f,0.0f,0.0f,1.0f}},
+		{{-1.0f, -1.0f, +1.0f}, {0.0f,1.0f,0.0f,1.0f}},
+		{{-1.0f, +1.0f, +1.0f}, {0.0f,0.0f,1.0f,1.0f}},
+		{{+1.0f, +1.0f, +1.0f}, {1.0f,0.0f,0.0f,1.0f}},
+		{{+1.0f, -1.0f, +1.0f}, {0.0f,1.0f,0.0f,1.0f}},
+	};
+
+	UINT16 triangleIndices[] =
+	{
+		// front face
+		0, 1, 2,
+		0, 2, 3,
+
+		// back face
+		4, 6, 5,
+		4, 7, 6,
+
+		// left face
+		4, 5, 1,
+		4, 1, 0,
+
+		// right face
+		3, 2, 6,
+		3, 6, 7,
+
+		// top face
+		1, 5, 6,
+		1, 6, 2,
+
+		// bottom face
+		4, 0, 3,
+		4, 3, 7
 	};
 
 	const UINT vertexBufferSize = sizeof(triangleVertices);
-
+	const UINT indexBufferSize = sizeof(triangleIndices);
+	gIndexCount = _countof(triangleIndices);
 
 	// 버텍스 버퍼 생성
 	ThrowIfFailed(gDevice->CreateCommittedResource(
@@ -678,6 +716,27 @@ void InitTriangle()
 	gVertexBufferView.SizeInBytes = vertexBufferSize;
 	gVertexBufferView.StrideInBytes = sizeof(Vertex);
 
+	// 인덱스 버퍼 생성
+	ThrowIfFailed(gDevice->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+		D3D12_HEAP_FLAG_NONE,
+		&CD3DX12_RESOURCE_DESC::Buffer(indexBufferSize),
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&gIndexBuffer)
+	));
+
+	// 인덱스 버퍼에 삼각형 정보 복사
+	UINT8* pIndexDataBegin;
+	ThrowIfFailed(gIndexBuffer->Map(0, nullptr, reinterpret_cast<void**>(&pIndexDataBegin)));
+	memcpy(pIndexDataBegin, triangleIndices, sizeof(triangleIndices));
+	gIndexBuffer->Unmap(0, nullptr);
+
+	// 인덱스 버퍼 뷰 생성
+	gIndexBufferView.BufferLocation = gIndexBuffer->GetGPUVirtualAddress();
+	gIndexBufferView.SizeInBytes = indexBufferSize;
+	gIndexBufferView.Format = DXGI_FORMAT_R16_UINT;
+
 	FlushCommandQueue();
 }
 
@@ -686,8 +745,9 @@ void RenderTriangle()
 	// TODO: Input Assembly, Vertex Buffer View, Draw Instance
 	gCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	gCommandList->IASetVertexBuffers(0, 1, &gVertexBufferView);
+	gCommandList->IASetIndexBuffer(&gIndexBufferView);
 	//D3D12 WARNING: ID3D12CommandList::DrawInstanced: Element [0] in the current Input Layout's declaration references input slot 0, but there is no Buffer bound to this slot. This is OK, as reads from an empty slot are defined to return 0. It is also possible the developer knows the data will not be used anyway. This is only a problem if the developer actually intended to bind an input Buffer here.  [ EXECUTION WARNING #202: COMMAND_LIST_DRAW_VERTEX_BUFFER_NOT_SET]
-	gCommandList->DrawInstanced(3, 1, 0, 0);
+	gCommandList->DrawIndexedInstanced(gIndexCount, 1, 0, 0, 0);
 }
 
 void InitConstantBuffer()
