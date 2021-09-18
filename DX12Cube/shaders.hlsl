@@ -11,7 +11,7 @@
 
 cbuffer ObjectConstantBuffer : register(b0)
 {
-    float4 offset;
+    float4x4 worldViewProjection;
 };
 
 struct PSInput
@@ -24,7 +24,7 @@ PSInput VSMain(float4 position : POSITION, float4 color : COLOR)
 {
     PSInput result;
 
-    result.position = position + offset;
+    result.position = mul(position, worldViewProjection);
     result.color = color;
 
     return result;

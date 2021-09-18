@@ -190,13 +190,36 @@ void InitConstantBuffer();
 
 struct ObjectConstantBuffer
 {
-	XMFLOAT4 offset;	// 16
-	char padding[256 - sizeof(offset)];
+	XMFLOAT4X4 WorldViewProjection;
+	char padding[256 - sizeof(WorldViewProjection)];
 };
 
 ID3D12Resource* gConstantBuffer = nullptr;
 ObjectConstantBuffer gConstantBufferData;
 UINT8* gCbvDataBegin;
+
+// 모델 뷰 프로젝션
+XMFLOAT4X4 gWorld = XMFLOAT4X4(
+	1.0f, 0.0f, 0.0f, 0.0f,
+	0.0f, 1.0f, 0.0f, 0.0f,
+	0.0f, 0.0f, 1.0f, 0.0f,
+	0.0f, 0.0f, 0.0f, 1.0f);
+
+XMFLOAT4X4 gView = XMFLOAT4X4(
+	1.0f, 0.0f, 0.0f, 0.0f,
+	0.0f, 1.0f, 0.0f, 0.0f,
+	0.0f, 0.0f, 1.0f, 0.0f,
+	0.0f, 0.0f, 0.0f, 1.0f);
+
+XMFLOAT4X4 gProj = XMFLOAT4X4(
+	1.0f, 0.0f, 0.0f, 0.0f,
+	0.0f, 1.0f, 0.0f, 0.0f,
+	0.0f, 0.0f, 1.0f, 0.0f,
+	0.0f, 0.0f, 0.0f, 1.0f);
+
+float gTheta;
+float gPhi = XM_PIDIV4;
+float gRadius = 5.0f;
 
 /*** Win32 관련 ***/
 
@@ -458,7 +481,7 @@ void Update()
 	// TODO: 키 입력 받기
 	{
 	}
-
+	/*
 	const float translationSpeed = 0.0005f;
 	const float offsetBound = 1.25f;
 
@@ -467,6 +490,28 @@ void Update()
 	{
 		gConstantBufferData.offset.x -= offsetBound * 2;
 	}
+	*/
+
+	// 카메라 설정
+	float x = gRadius * sinf(gPhi) * cosf(gTheta);
+	float y = gRadius * sinf(gPhi) * sinf(gTheta);
+	float z = gRadius * cosf(gPhi);
+
+	XMVECTOR pos = XMVectorSet(x, y, z, 1);
+	XMVECTOR target = XMVectorZero();
+	XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+
+	XMMATRIX view = XMMatrixLookAtLH(pos, target, up);
+	XMStoreFloat4x4(&gView, view);
+
+	float aspectRatio = ((float)gClientWidth) / gClientHeight;
+	XMMATRIX proj = XMMatrixPerspectiveFovLH(XM_PIDIV2, aspectRatio, 1, 1000);
+	XMStoreFloat4x4(&gProj, proj);
+
+	XMMATRIX world = XMLoadFloat4x4(&gWorld);
+	auto worldViewProjection = XMMatrixTranspose(world * view * proj);
+
+	XMStoreFloat4x4(&gConstantBufferData.WorldViewProjection, worldViewProjection);
 
 	memcpy(gCbvDataBegin, &gConstantBufferData, sizeof(gConstantBufferData));
 }
