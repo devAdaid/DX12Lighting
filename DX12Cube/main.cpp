@@ -334,6 +334,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		// PostQuitMessage()는 메시지에 WM_QUIT을 넣는다.
 		PostQuitMessage(0);
 		break;
+	case WM_SIZE:
+		gClientWidth = LOWORD(lParam);
+		gClientHeight = HIWORD(lParam);
+		break;
 	}
 
 	return DefWindowProc(hWnd, message, wParam, lParam);
