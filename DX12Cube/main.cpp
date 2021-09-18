@@ -709,8 +709,13 @@ void CreatePSO()
 		0;
 #endif
 
-	ThrowIfFailed(D3DCompileFromFile(L"shaders.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShader, &error));
-	ThrowIfFailed(D3DCompileFromFile(L"shaders.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, &error));
+	D3DCompileFromFile(L"shaders.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShader, &error);
+	auto errorBufferPtr = error->GetBufferPointer();
+	OutputDebugStringA((LPCSTR)errorBufferPtr);
+
+	D3DCompileFromFile(L"shaders.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, &error);
+	errorBufferPtr = error->GetBufferPointer();
+	OutputDebugStringA((LPCSTR)errorBufferPtr);
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psDesc = { };
 	psDesc.pRootSignature = gRootSignature;
