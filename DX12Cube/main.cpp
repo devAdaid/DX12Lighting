@@ -191,7 +191,8 @@ void InitConstantBuffer();
 struct ObjectConstantBuffer
 {
 	XMFLOAT4X4 WorldViewProjection;
-	char padding[256 - sizeof(WorldViewProjection)];
+	XMFLOAT3 EyePos;
+	char padding[256 - sizeof(WorldViewProjection) - sizeof(EyePos)];
 };
 
 ID3D12Resource* gConstantBuffer = nullptr;
@@ -548,6 +549,7 @@ void Update()
 	auto worldViewProjection = XMMatrixTranspose(world * view * proj);
 
 	XMStoreFloat4x4(&gConstantBufferData.WorldViewProjection, worldViewProjection);
+	XMStoreFloat3(&gConstantBufferData.EyePos, pos);
 
 	memcpy(gCbvDataBegin, &gConstantBufferData, sizeof(gConstantBufferData));
 }
