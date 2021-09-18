@@ -221,6 +221,10 @@ float gTheta;
 float gPhi = XM_PIDIV4;
 float gRadius = 5.0f;
 
+// 키 입력
+bool isLeftKeyPressed = false;
+bool isRightKeyPressed = false;
+
 /*** Win32 관련 ***/
 
 HWND gHWnd = nullptr;
@@ -306,6 +310,24 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		if (wParam == VK_ESCAPE)
 		{
 			PostQuitMessage(0);
+		}
+		else if (wParam == VK_LEFT)
+		{
+			isLeftKeyPressed = true;
+		}
+		else if (wParam == VK_RIGHT)
+		{
+			isRightKeyPressed = true;
+		}
+		break;
+	case WM_KEYUP:
+		if (wParam == VK_LEFT)
+		{
+			isLeftKeyPressed = false;
+		}
+		else if (wParam == VK_RIGHT)
+		{
+			isRightKeyPressed = false;
 		}
 		break;
 	case WM_DESTROY:
@@ -492,7 +514,15 @@ void Update()
 	}
 	*/
 
-	gTheta += 0.0005f;
+	if (isLeftKeyPressed)
+	{
+		gTheta += 0.0005f;
+	}
+
+	if (isRightKeyPressed)
+	{
+		gTheta -= 0.0005f;
+	}
 
 	// 카메라 설정
 	float x = gRadius * sinf(gPhi) * cosf(gTheta);
