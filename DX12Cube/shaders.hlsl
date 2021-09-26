@@ -28,6 +28,10 @@ struct Material
     float shininess;
 };
 
+float4 ComputeDirectLight(float lightStrength, float3 lightDirection, float3 normal, float3 toEye, Material mat);
+float3 BlinnPhong(float lightStrength, float3 lightVec, float3 normal, float3 toEye, Material mat);
+float3 SchlickFresnel(float3 r0, float3 normal, float3 lightVec);
+
 PSInput VSMain(float4 position : POSITION, float3 normal : NORMAL)
 {
     PSInput result;
@@ -56,11 +60,46 @@ float4 PSMain(PSInput input) : SV_TARGET
     // 빛이 들어오는 방향
     float3 toEye = normalize(eyePos - input.position);
 
-    // TODO: 빛을 계산한다.
-    float4 directLight = float4(1.0f, 1.0f, 1.0f, 1.0f);
+    // 빛을 계산한다
+    float4 directLight = ComputeDirectLight(lightStrength, lightDirection, input.normal, toEye, mat);
 
     float4 resultColor = ambient + directLight;
     resultColor.a = diffuseAlbedo.a;
 
     return resultColor;
+}
+
+float4 ComputeDirectLight(float lightStrength, float3 lightDirection, float3 normal, float3 toEye, Material mat)
+{
+    float3 lightVec = -lightDirection;
+
+    // 람베르트 코사인 법칙
+    float lambert = max(dot(lightVec, normal), 0.0f);
+    float3 color = BlinnPhong(lambert * lightStrength, lightVec, normal, toEye, mat);
+
+    return float4(color, 0.0f);
+}
+
+float3 BlinnPhong(float lightStrength, float3 lightVec, float3 normal, float3 toEye, Material mat)
+{
+    const float m = mat.shininess * 256.0f;
+    float3 halfVec = normalize(toEye + lightVec);
+
+    float cosTheta = saturate(dot(halfVec, normal));
+    float roughnessFactor = (m + 8.0f) * pow(cosTheta, m) / 8.0f;
+    float3 fresnelFactor = SchlickFresnel(mat.fresnelR0, halfVec, lightVec);
+
+    float3 specAlbedo = fresnelFactor * roughnessFactor;
+    specAlbedo = specAlbedo / (specAlbedo + 1.0f);
+
+    return (mat.diffuseAlbedo.rgb + specAlbedo) * lightStrength;
+}
+
+float3 SchlickFresnel(float3 r0, float3 normal, float3 lightVec)
+{
+    float cosIncidentAngle = saturate(dot(normal, lightVec));
+    float f0 = 1.0f - cosIncidentAngle;
+    float reflectPercent = r0 + (1.0f - r0) * (f0 * f0 * f0 * f0 * f0);
+
+    return reflectPercent;
 }
