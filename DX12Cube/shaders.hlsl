@@ -22,6 +22,7 @@ struct PSInput
 {
     float4 position : SV_POSITION;
     float3 normal : NORMAL;
+    float2 tex : TEXCOORD;
 };
 
 struct Material
@@ -35,12 +36,13 @@ float4 ComputeDirectLight(float lightStrength, float3 lightDirection, float3 nor
 float3 BlinnPhong(float lightStrength, float3 lightVec, float3 normal, float3 toEye, Material mat);
 float3 SchlickFresnel(float3 r0, float3 normal, float3 lightVec);
 
-PSInput VSMain(float4 position : POSITION, float3 normal : NORMAL)
+PSInput VSMain(float4 position : POSITION, float3 normal : NORMAL, float2 tex : TEXCOORD)
 {
     PSInput result;
 
     result.position = mul(position, worldViewProjection);
     result.normal = mul(normal, (float3x3)worldViewProjection);
+    result.tex = tex;
 
     return result;
 }
@@ -48,7 +50,7 @@ PSInput VSMain(float4 position : POSITION, float3 normal : NORMAL)
 float4 PSMain(PSInput input) : SV_TARGET
 {
     const float4 ambientLight = float4(0.0f, 0.0f, 0.0f, 1.0f);
-    const float4 diffuseAlbedo = float4(1.0f, 1.0f, 1.0f, 1.0f);
+    const float4 diffuseAlbedo = gScribbleTex.Sample(gSampler, input.tex);
     const float3 fresnelR0 = float3(0.04f, 0.04f, 0.04f);
     const float shininess = 0.5f;
 

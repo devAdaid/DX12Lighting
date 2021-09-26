@@ -169,6 +169,7 @@ typedef struct _Vertex
 {
 	XMFLOAT3 position;
 	XMFLOAT3 normal;
+	XMFLOAT2 tex;
 } Vertex;
 
 ID3D12Resource* gVertexBuffer;
@@ -725,7 +726,7 @@ void CreateRootSignature()
 	CD3DX12_STATIC_SAMPLER_DESC sampler(0);
 
 	ThrowIfFailed(D3D12SerializeRootSignature(
-		&CD3DX12_ROOT_SIGNATURE_DESC(_countof(rootParams), rootParams, 0, &sampler, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT),
+		&CD3DX12_ROOT_SIGNATURE_DESC(_countof(rootParams), rootParams, 1, &sampler, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT),
 		D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error));
 	ThrowIfFailed(gDevice->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&gRootSignature)));
 }
@@ -736,6 +737,7 @@ void CreatePSO()
 	{
 		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
 		{"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, sizeof(XMFLOAT3), D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+		{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, sizeof(XMFLOAT3) + sizeof(XMFLOAT3), D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
 	};
 
 	ID3DBlob* vertexShader = nullptr;
@@ -782,40 +784,40 @@ void InitTriangle()
 	Vertex triangleVertices[] =
 	{
 		// front face
-		{{-1.0f, -1.0f, -1.0f}, {0.0f, 0.0f, -1.0f}},
-		{{-1.0f, +1.0f, -1.0f}, {0.0f, 0.0f, -1.0f}},
-		{{+1.0f, +1.0f, -1.0f}, {0.0f, 0.0f, -1.0f}},
-		{{+1.0f, -1.0f, -1.0f}, {0.0f, 0.0f, -1.0f}},
+		{{-1.0f, -1.0f, -1.0f}, {0.0f, 0.0f, -1.0f}, {0, 1}},
+		{{-1.0f, +1.0f, -1.0f}, {0.0f, 0.0f, -1.0f}, {0, 0}},
+		{{+1.0f, +1.0f, -1.0f}, {0.0f, 0.0f, -1.0f}, {1, 0}},
+		{{+1.0f, -1.0f, -1.0f}, {0.0f, 0.0f, -1.0f}, {1, 1}},
 
 		// back face
-		{{-1.0f, -1.0f, +1.0f}, {0.0f, 0.0f, 1.0f}},
-		{{-1.0f, +1.0f, +1.0f}, {0.0f, 0.0f, 1.0f}},
-		{{+1.0f, +1.0f, +1.0f}, {0.0f, 0.0f, 1.0f}},
-		{{+1.0f, -1.0f, +1.0f}, {0.0f, 0.0f, 1.0f}},
+		{{-1.0f, -1.0f, +1.0f}, {0.0f, 0.0f, 1.0f}, {0, 1}},
+		{{-1.0f, +1.0f, +1.0f}, {0.0f, 0.0f, 1.0f}, {0, 0}},
+		{{+1.0f, +1.0f, +1.0f}, {0.0f, 0.0f, 1.0f}, {1, 0}},
+		{{+1.0f, -1.0f, +1.0f}, {0.0f, 0.0f, 1.0f}, {1, 1}},
 
 		// left face
-		{{-1.0f, -1.0f, +1.0f}, {-1.0f, 0.0f, 0.0f}},
-		{{-1.0f, +1.0f, +1.0f}, {-1.0f, 0.0f, 0.0f}},
-		{{-1.0f, +1.0f, -1.0f}, {-1.0f, 0.0f, 0.0f}},
-		{{-1.0f, -1.0f, -1.0f}, {-1.0f, 0.0f, 0.0f}},
+		{{-1.0f, -1.0f, +1.0f}, {-1.0f, 0.0f, 0.0f}, {0, 1}},
+		{{-1.0f, +1.0f, +1.0f}, {-1.0f, 0.0f, 0.0f}, {0, 0}},
+		{{-1.0f, +1.0f, -1.0f}, {-1.0f, 0.0f, 0.0f}, {1, 0}},
+		{{-1.0f, -1.0f, -1.0f}, {-1.0f, 0.0f, 0.0f}, {1, 1}},
 
 		// right face
-		{{+1.0f, -1.0f, -1.0f}, {1.0f, 0.0f, 0.0f}},
-		{{+1.0f, +1.0f, -1.0f}, {1.0f, 0.0f, 0.0f}},
-		{{+1.0f, +1.0f, +1.0f}, {1.0f, 0.0f, 0.0f}},
-		{{+1.0f, -1.0f, +1.0f}, {1.0f, 0.0f, 0.0f}},
+		{{+1.0f, -1.0f, -1.0f}, {1.0f, 0.0f, 0.0f}, {0, 1}},
+		{{+1.0f, +1.0f, -1.0f}, {1.0f, 0.0f, 0.0f}, {0, 0}},
+		{{+1.0f, +1.0f, +1.0f}, {1.0f, 0.0f, 0.0f}, {1, 0}},
+		{{+1.0f, -1.0f, +1.0f}, {1.0f, 0.0f, 0.0f}, {1, 1}},
 
 		// top face
-		{{-1.0f, +1.0f, -1.0f}, {0.0f, 1.0f, 0.0f}},
-		{{-1.0f, +1.0f, +1.0f}, {0.0f, 1.0f, 0.0f}},
-		{{+1.0f, +1.0f, +1.0f}, {0.0f, 1.0f, 0.0f}},
-		{{+1.0f, +1.0f, -1.0f}, {0.0f, 1.0f, 0.0f}},
+		{{-1.0f, +1.0f, -1.0f}, {0.0f, 1.0f, 0.0f}, {0, 1}},
+		{{-1.0f, +1.0f, +1.0f}, {0.0f, 1.0f, 0.0f}, {0, 0}},
+		{{+1.0f, +1.0f, +1.0f}, {0.0f, 1.0f, 0.0f}, {1, 0}},
+		{{+1.0f, +1.0f, -1.0f}, {0.0f, 1.0f, 0.0f}, {1, 1}},
 
 		// bottom face
-		{{-1.0f, -1.0f, +1.0f}, {0.0f, -1.0f, 0.0f}},
-		{{-1.0f, -1.0f, -1.0f}, {0.0f, -1.0f, 0.0f}},
-		{{+1.0f, -1.0f, -1.0f}, {0.0f, -1.0f, 0.0f}},
-		{{+1.0f, -1.0f, +1.0f}, {0.0f, -1.0f, 0.0f}},
+		{{-1.0f, -1.0f, +1.0f}, {0.0f, -1.0f, 0.0f}, {0, 1}},
+		{{-1.0f, -1.0f, -1.0f}, {0.0f, -1.0f, 0.0f}, {0, 0}},
+		{{+1.0f, -1.0f, -1.0f}, {0.0f, -1.0f, 0.0f}, {1, 0}},
+		{{+1.0f, -1.0f, +1.0f}, {0.0f, -1.0f, 0.0f}, {1, 1}},
 	};
 
 	UINT16 triangleIndices[] =
