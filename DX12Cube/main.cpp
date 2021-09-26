@@ -586,10 +586,16 @@ void PopulateCommandList()
 	// 루트 서명 넣기
 	gCommandList->SetGraphicsRootSignature(gRootSignature);
 
-	ID3D12DescriptorHeap* heaps[] = { gCbvHeap };
-	gCommandList->SetDescriptorHeaps(_countof(heaps), heaps);
-
-	gCommandList->SetGraphicsRootDescriptorTable(0, gCbvHeap->GetGPUDescriptorHandleForHeapStart());
+	{
+		ID3D12DescriptorHeap* heaps[] = { gCbvHeap };
+		gCommandList->SetDescriptorHeaps(_countof(heaps), heaps);
+		gCommandList->SetGraphicsRootDescriptorTable(0, gCbvHeap->GetGPUDescriptorHandleForHeapStart());
+	}
+	{
+		ID3D12DescriptorHeap* heaps[] = {  gSrvHeap };
+		gCommandList->SetDescriptorHeaps(_countof(heaps), heaps);
+		gCommandList->SetGraphicsRootDescriptorTable(1, gSrvHeap->GetGPUDescriptorHandleForHeapStart());
+	}
 
 	// RS
 	gCommandList->RSSetViewports(1, &gViewport);
