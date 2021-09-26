@@ -699,11 +699,19 @@ void Release()
 
 void CreateRootSignature()
 {
-	CD3DX12_DESCRIPTOR_RANGE range[1];
-	CD3DX12_ROOT_PARAMETER rootParams[1];
+	CD3DX12_ROOT_PARAMETER rootParams[2];
 
-	range[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
-	rootParams[0].InitAsDescriptorTable(1, &range[0]);
+	{
+		CD3DX12_DESCRIPTOR_RANGE range[1];
+		range[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+		rootParams[0].InitAsDescriptorTable(1, &range[0]);
+	}
+
+	{
+		CD3DX12_DESCRIPTOR_RANGE range[1];
+		range[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+		rootParams[1].InitAsDescriptorTable(1, &range[0]);
+	}
 
 	ID3DBlob* signature = nullptr;
 	ID3DBlob* error = nullptr;
