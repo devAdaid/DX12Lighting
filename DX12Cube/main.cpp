@@ -11,6 +11,8 @@
 
 #include <comdef.h>
 
+#include "DDSTextureLoader.h"
+
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "dxguid.lib")
@@ -255,7 +257,10 @@ int WINAPI wWinMain(
 	wc.lpszMenuName = 0;
 	wc.lpszClassName = className;
 
+#pragma warning(push)
+#pragma warning(disable : 4297)
 	ThrowIfFailed(RegisterClass(&wc));
+#pragma warning(pop)
 
 	gHWnd = CreateWindow(
 		className,
@@ -466,8 +471,8 @@ void CreateViewport()
 	gViewport = { };
 	gViewport.TopLeftX = 0;
 	gViewport.TopLeftY = 0;
-	gViewport.Width = gClientWidth;
-	gViewport.Height = gClientHeight;
+	gViewport.Width = static_cast<FLOAT>(gClientWidth);
+	gViewport.Height = static_cast<FLOAT>(gClientHeight);
 	gViewport.MinDepth = 0;
 	gViewport.MaxDepth = 1;
 }
@@ -493,7 +498,7 @@ void CreateHeapResources()
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(gRtvHeap->GetCPUDescriptorHandleForHeapStart(), gCurrentBufferIndex, gRtvHeapSize);
 	for (size_t i = 0; i < SwapChainBufferCount; i++)
 	{
-		ThrowIfFailed(gSwapChain->GetBuffer(i, IID_PPV_ARGS(&gRenderBuffer[i])));
+		ThrowIfFailed(gSwapChain->GetBuffer(static_cast<UINT>(i), IID_PPV_ARGS(&gRenderBuffer[i])));
 		gDevice->CreateRenderTargetView(gRenderBuffer[i], nullptr, rtvHandle);
 		rtvHandle.Offset(gRtvHeapSize);
 	}
