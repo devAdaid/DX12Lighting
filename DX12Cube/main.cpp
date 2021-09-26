@@ -109,6 +109,7 @@ ID3D12Resource* gRenderBuffer[SwapChainBufferCount] = { nullptr };
 ID3D12DescriptorHeap* gRtvHeap = nullptr;
 ID3D12DescriptorHeap* gDsvHeap = nullptr;
 ID3D12DescriptorHeap* gCbvHeap = nullptr;
+ID3D12DescriptorHeap* gSrvHeap = nullptr;
 
 Microsoft::WRL::ComPtr<ID3D12Resource> gScribbleTex;
 
@@ -193,6 +194,7 @@ void RenderTriangle();
 // 상수 버퍼
 
 void InitConstantBuffer();
+void InitShaderResource();
 
 struct ObjectConstantBuffer
 {
@@ -375,6 +377,7 @@ HRESULT InitD3D(HWND hWnd)
 	InitTriangle();
 
 	InitConstantBuffer();
+	InitShaderResource();
 
 	CreateViewport();
 	CreateScissorRect();
@@ -438,6 +441,14 @@ void CreateHeaps()
 	cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 
 	ThrowIfFailed(gDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&gCbvHeap)));
+
+	// TODO: srv
+	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
+	cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	cbvHeapDesc.NumDescriptors = 1;
+	cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+
+	ThrowIfFailed(gDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&gSrvHeap)));
 
 	gRtvHeapSize = gDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	gDsvHeapSize = gDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
@@ -667,6 +678,7 @@ void Release()
 
 	COM_RELEASE(gCbvHeap);
 	COM_RELEASE(gRtvHeap);
+	COM_RELEASE(gSrvHeap);
 
 	COM_RELEASE(gCommandQueue);
 	COM_RELEASE(gCommandAlloc);
@@ -901,7 +913,20 @@ void InitConstantBuffer()
 	//gConstantBuffer->Unmap(0, nullptr);
 }
 
+void InitShaderResource()
+{
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = { };
+	srvDesc.Format = gScribbleTex->GetDesc().Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	srvDesc.Texture2D.MipLevels = gScribbleTex->GetDesc().MipLevels;
+	srvDesc.Texture2D.PlaneSlice = 0;
+	srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 
+	gDevice->CreateShaderResourceView(gScribbleTex.Get(), &srvDesc,
+		gSrvHeap->GetCPUDescriptorHandleForHeapStart());
+}
 
 void CreateScribbleTextureResourceFromFile()
 {
