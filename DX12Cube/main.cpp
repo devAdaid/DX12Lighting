@@ -110,6 +110,8 @@ ID3D12DescriptorHeap* gRtvHeap = nullptr;
 ID3D12DescriptorHeap* gDsvHeap = nullptr;
 ID3D12DescriptorHeap* gCbvHeap = nullptr;
 
+Microsoft::WRL::ComPtr<ID3D12Resource> gScribbleTex;
+
 // rtv, dsv, cbv 힙의 크기
 UINT gRtvHeapSize = 0;
 UINT gDsvHeapSize = 0;
@@ -140,6 +142,8 @@ void CreateSwapChain();
 void CreateViewport();
 void CreateScissorRect();
 void CreateFence();
+
+void CreateScribbleTextureResourceFromFile();
 
 // rtv, dsv 관련 리소스 생성
 void CreateHeapResources();
@@ -366,6 +370,7 @@ HRESULT InitD3D(HWND hWnd)
 	CreateSwapChain();
 	CreateHeapResources();
 	CreateFence();
+	CreateScribbleTextureResourceFromFile();
 
 	InitTriangle();
 
@@ -646,6 +651,8 @@ void Release()
 	COM_RELEASE(gVertexBuffer);
 	COM_RELEASE(gIndexBuffer);
 
+	gScribbleTex.Reset();
+
 	COM_RELEASE(gPSO);
 	COM_RELEASE(gRootSignature);
 
@@ -892,4 +899,22 @@ void InitConstantBuffer()
 	gConstantBuffer->Map(0, nullptr, reinterpret_cast<void**>(&gCbvDataBegin));
 	memcpy(gCbvDataBegin, &gConstantBufferData, sizeof(gConstantBufferData));
 	//gConstantBuffer->Unmap(0, nullptr);
+}
+
+
+
+void CreateScribbleTextureResourceFromFile()
+{
+	ThrowIfFailed(gCommandAlloc->Reset());
+	ThrowIfFailed(gCommandList->Reset(gCommandAlloc, gPSO));
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> scribbleTexUploadHeap;
+	CreateDDSTextureFromFile12(gDevice, gCommandList, L"scribble.dds", 
+		gScribbleTex, scribbleTexUploadHeap);
+
+	ThrowIfFailed(gCommandList->Close());
+
+	ID3D12CommandList* cmdLists[] = { gCommandList };
+	gCommandQueue->ExecuteCommandLists(_countof(cmdLists), cmdLists);
+	FlushCommandQueue();
 }
