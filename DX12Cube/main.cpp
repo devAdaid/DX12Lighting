@@ -722,8 +722,10 @@ void CreateRootSignature()
 	ID3DBlob* signature = nullptr;
 	ID3DBlob* error = nullptr;
 
+	CD3DX12_STATIC_SAMPLER_DESC sampler(0);
+
 	ThrowIfFailed(D3D12SerializeRootSignature(
-		&CD3DX12_ROOT_SIGNATURE_DESC(_countof(rootParams), rootParams, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT),
+		&CD3DX12_ROOT_SIGNATURE_DESC(_countof(rootParams), rootParams, 0, &sampler, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT),
 		D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error));
 	ThrowIfFailed(gDevice->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&gRootSignature)));
 }

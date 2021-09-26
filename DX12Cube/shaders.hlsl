@@ -9,6 +9,9 @@
 //
 //*********************************************************
 
+Texture2D gScribbleTex : register(t0);
+SamplerState gSampler : register(s0);
+
 cbuffer ObjectConstantBuffer : register(b0)
 {
     float4x4 worldViewProjection;
